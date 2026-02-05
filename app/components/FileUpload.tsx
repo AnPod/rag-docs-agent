@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 
 export function FileUpload({ onUpload }: { onUpload?: () => void }) {
   const [dragActive, setDragActive] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadedCount, setUploadedCount] = useState(0)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -29,6 +30,13 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     await uploadFiles(files)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      inputRef.current?.click()
+    }
   }
 
   const uploadFiles = async (files: File[]) => {
@@ -65,17 +73,23 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label="Drop files here or press Enter to select files"
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
         }`}
       >
         <input
+          ref={inputRef}
           type="file"
           multiple
           accept=".md,.txt"
           onChange={handleChange}
           className="hidden"
           id="file-upload"
+          aria-label="File upload input"
         />
         <label
           htmlFor="file-upload"
@@ -87,12 +101,28 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
         <p className="text-sm text-gray-400 mt-2">Markdown and text files only</p>
       </div>
 
+      {/* Keyboard accessible upload button */}
+      <button
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        aria-label="Select files to upload"
+        className="w-full py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+      >
+        Select Files
+      </button>
+
       {uploading && (
-        <p className="text-blue-500 text-sm">Uploading...</p>
+        <div className="flex items-center gap-2 text-blue-500 text-sm" role="status" aria-live="polite">
+          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Uploading...</span>
+        </div>
       )}
 
-      {uploadedCount > 0 && (
-        <p className="text-green-600 text-sm">
+      {uploadedCount > 0 && !uploading && (
+        <p className="text-green-600 text-sm" role="status">
           ✓ {uploadedCount} file(s) uploaded successfully
         </p>
       )}

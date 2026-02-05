@@ -53,7 +53,12 @@ export function ChatInterface() {
   return (
     <div className="flex flex-col h-[600px] border rounded-lg">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat messages"
+      >
         {messages.length === 0 && (
           <p className="text-gray-500 text-center">
             Upload documents and ask questions about them!
@@ -104,12 +109,14 @@ export function ChatInterface() {
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
           placeholder="Ask a question..."
+          aria-label="Message input"
           className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           onClick={sendMessage}
           disabled={loading || !input.trim()}
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-300 hover:bg-blue-600"
+          aria-label="Send message"
+          className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-300 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Send
         </button>

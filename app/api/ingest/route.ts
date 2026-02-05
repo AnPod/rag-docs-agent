@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import { extractTextFromFile, chunkText, generateEmbeddings, ChromaClient } from '@/lib'
 
+const ALLOWED_EXTENSIONS = ['.md', '.txt', '.markdown', '.text']
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
+function isAllowedFileType(filename: string): boolean {
+  const ext = filename.toLowerCase().slice(filename.lastIndexOf('.'))
+  return ALLOWED_EXTENSIONS.includes(ext)
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
@@ -9,6 +17,22 @@ export async function POST(request: Request) {
     if (!file) {
       return NextResponse.json(
         { success: false, error: 'No file provided' },
+        { status: 400 }
+      )
+    }
+
+    // Validate file type
+    if (!isAllowedFileType(file.name)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid file type. Only .md and .txt files are allowed' },
+        { status: 400 }
+      )
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: 'File too large. Maximum size is 10MB' },
         { status: 400 }
       )
     }
