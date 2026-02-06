@@ -31,7 +31,7 @@ describe("POST /api/ingest", () => {
 
       expect(response.status).toBe(400);
       expect(data.success).toBe(false);
-      expect(data.error).toBe("No file provided");
+      expect(data.error).toBe("No valid file provided");
     });
 
     it("should return 400 for unsupported file types (should reject non .md/.txt)", async () => {

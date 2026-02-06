@@ -51,11 +51,8 @@ describe("generateEmbedding", () => {
     expect(typeof result[0]).toBe("number");
   });
 
-  it("should handle empty string", async () => {
-    const result = await generateEmbedding("");
-
-    expect(result).toBeInstanceOf(Array);
-    expect(result.length).toBe(1536);
+  it("should throw error for empty string", async () => {
+    await expect(generateEmbedding("")).rejects.toThrow("non-empty string");
   });
 
   it("should handle long text", async () => {

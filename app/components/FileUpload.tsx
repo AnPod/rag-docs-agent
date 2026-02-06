@@ -2,10 +2,22 @@
 
 import { useState, useCallback, useRef } from "react";
 
-export function FileUpload({ onUpload }: { onUpload?: () => void }) {
+interface UploadError {
+  fileName: string;
+  message: string;
+}
+
+export function FileUpload({
+  onUpload,
+  onError,
+}: {
+  onUpload?: () => void;
+  onError?: (errors: UploadError[]) => void;
+}) {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [errors, setErrors] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -21,9 +33,37 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
   const uploadFiles = useCallback(
     async (files: File[]) => {
       setUploading(true);
+      setErrors([]);
       let successCount = 0;
+      const uploadErrors: { fileName: string; message: string }[] = [];
+
+      // Validate files before upload
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      const ALLOWED_EXTENSIONS = [".md", ".txt", ".markdown", ".text"];
 
       for (const file of files) {
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+          const error = `${file.name}: File too large (max 10MB)`;
+          setErrors((prev) => [...prev, error]);
+          uploadErrors.push({ fileName: file.name, message: "File too large" });
+          continue;
+        }
+
+        // Validate file extension
+        const ext = file.name
+          .toLowerCase()
+          .slice(file.name.lastIndexOf("."));
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+          const error = `${file.name}: Invalid file type (.md/.txt only)`;
+          setErrors((prev) => [...prev, error]);
+          uploadErrors.push({
+            fileName: file.name,
+            message: "Invalid file type",
+          });
+          continue;
+        }
+
         try {
           const formData = new FormData();
           formData.append("file", file);
@@ -33,19 +73,45 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
             body: formData,
           });
 
-          if (response.ok) {
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || `HTTP ${response.status}`);
+          }
+
+          if (data.success) {
             successCount++;
+          } else {
+            throw new Error(data.error || "Upload failed");
           }
         } catch (error) {
-          console.error("Upload error:", error);
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          setErrors((prev) => [...prev, `${file.name}: ${errorMessage}`]);
+          uploadErrors.push({
+            fileName: file.name,
+            message: errorMessage,
+          });
         }
       }
 
       setUploadedCount((prev) => prev + successCount);
       setUploading(false);
-      onUpload?.();
+
+      if (uploadErrors.length > 0) {
+        onError?.(uploadErrors);
+      }
+
+      if (successCount > 0) {
+        onUpload?.();
+      }
+
+      // Clear errors after 10 seconds
+      if (errors.length > 0) {
+        setTimeout(() => setErrors([]), 10000);
+      }
     },
-    [onUpload]
+    [onUpload, onError, errors.length]
   );
 
   const handleDrop = useCallback(
@@ -64,6 +130,8 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files || []);
       await uploadFiles(files);
+      // Reset input so same file can be selected again
+      e.target.value = "";
     },
     [uploadFiles]
   );
@@ -94,7 +162,7 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
           ref={inputRef}
           type="file"
           multiple
-          accept=".md,.txt"
+          accept=".md,.txt,.markdown,.text"
           onChange={handleChange}
           className="hidden"
           id="file-upload"
@@ -108,7 +176,7 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
         </label>
         <span className="text-gray-500"> or drag and drop</span>
         <p className="text-sm text-gray-400 mt-2">
-          Markdown and text files only
+          Markdown and text files only (max 10MB)
         </p>
       </div>
 
@@ -152,8 +220,36 @@ export function FileUpload({ onUpload }: { onUpload?: () => void }) {
         </div>
       )}
 
-      {uploadedCount > 0 && !uploading && (
-        <p className="text-green-600 text-sm" role="status">
+      {errors.length > 0 && !uploading && (
+        <div
+          className="space-y-1"
+          role="alert"
+          aria-live="assertive"
+        >
+          {errors.map((error, idx) => (
+            <p key={idx} className="text-red-600 text-sm flex items-center gap-2">
+              <svg
+                className="h-4 w-4 flex-shrink-0"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>{error}</span>
+            </p>
+          ))}
+        </div>
+      )}
+
+      {uploadedCount > 0 && !uploading && errors.length === 0 && (
+        <p className="text-green-600 text-sm" role="status" aria-live="polite">
           ✓ {uploadedCount} file(s) uploaded successfully
         </p>
       )}

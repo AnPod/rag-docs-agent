@@ -27,7 +27,7 @@ describe("extractTextFromFile", () => {
     });
 
     await expect(extractTextFromFile(file)).rejects.toThrow(
-      "Unsupported file type"
+      "Unsupported file"
     );
   });
 

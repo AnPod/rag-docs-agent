@@ -5,13 +5,43 @@ interface ChunkOptions {
   overlap: number;
 }
 
+interface ValidatedChunkOptions {
+  maxChunkSize: number;
+  overlap: number;
+}
+
+function validateChunkOptions(options: ChunkOptions): ValidatedChunkOptions {
+  const { maxChunkSize, overlap } = options;
+
+  if (typeof maxChunkSize !== "number" || maxChunkSize <= 0) {
+    throw new Error("maxChunkSize must be a positive number");
+  }
+
+  if (typeof overlap !== "number" || overlap < 0) {
+    throw new Error("overlap must be a non-negative number");
+  }
+
+  if (overlap >= maxChunkSize) {
+    throw new Error("overlap must be less than maxChunkSize");
+  }
+
+  return { maxChunkSize, overlap };
+}
+
 export function chunkText(
   text: string,
   options: ChunkOptions
 ): DocumentChunk[] {
-  if (!text.trim()) return [];
+  // Validate input
+  if (typeof text !== "string") {
+    throw new Error("text must be a string");
+  }
 
-  const { maxChunkSize, overlap } = options;
+  if (!text.trim()) {
+    return [];
+  }
+
+  const { maxChunkSize, overlap } = validateChunkOptions(options);
   const chunks: DocumentChunk[] = [];
   const lines = text.split("\n");
 
@@ -37,12 +67,19 @@ export function chunkText(
         },
       });
 
-      // Handle overlap
+      // Handle overlap - ensure we don't get negative line numbers
       if (overlap > 0) {
         const words = currentChunk.split(" ");
-        const overlapWords = words.slice(-Math.ceil(overlap / 5));
+        const overlapWordCount = Math.min(
+          Math.ceil(overlap / 5),
+          words.length - 1
+        );
+        const overlapWords = words.slice(-overlapWordCount);
         currentChunk = overlapWords.join(" ") + " ";
-        startLine = currentLine - overlapWords.length;
+
+        // Calculate new start line, ensuring it's at least 1
+        const overlappingLines = overlapWords.length;
+        startLine = Math.max(1, currentLine - overlappingLines);
       } else {
         currentChunk = "";
         startLine = currentLine;
@@ -53,7 +90,7 @@ export function chunkText(
     currentLine++;
   }
 
-  // Push final chunk
+  // Push final chunk if there's content
   if (currentChunk.trim()) {
     chunks.push({
       id: `chunk-${chunks.length}`,

@@ -28,12 +28,31 @@ vi.mock("openai", () => {
 
 // Mock the lib functions at module level
 const mockSearch = vi.fn();
+const mockOpenAIClient = {
+  chat: {
+    completions: {
+      create: vi.fn().mockResolvedValue({
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: "assistant",
+              content: "This is a test response from the assistant.",
+            },
+            finish_reason: "stop",
+          },
+        ],
+      }),
+    },
+  },
+};
 
 vi.mock("@/lib", () => ({
   generateEmbedding: vi.fn(),
   ChromaClient: vi.fn().mockImplementation(() => ({
     search: mockSearch,
   })),
+  getOpenAIClient: vi.fn(() => mockOpenAIClient),
 }));
 
 describe("POST /api/chat", () => {
@@ -94,7 +113,7 @@ describe("POST /api/chat", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid message format");
+    expect(data.error).toBe("Last message must be from user");
   });
 
   it("should return 400 for empty messages", async () => {
@@ -108,7 +127,9 @@ describe("POST /api/chat", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid message format");
+    expect(data.error).toBe(
+      "Invalid message format: messages must be a non-empty array"
+    );
   });
 
   it("should return 500 on error", async () => {
