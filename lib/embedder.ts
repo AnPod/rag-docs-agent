@@ -1,25 +1,25 @@
-import OpenAI from 'openai'
+import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: "text-embedding-3-small",
     input: text,
-    encoding_format: 'float'
-  })
+    encoding_format: "float",
+  });
 
-  return response.data[0].embedding
+  return response.data[0].embedding;
 }
 
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: "text-embedding-3-small",
     input: texts,
-    encoding_format: 'float'
-  })
+    encoding_format: "float",
+  });
 
-  return response.data.map(d => d.embedding)
+  return response.data.map((d) => d.embedding);
 }

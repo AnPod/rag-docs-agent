@@ -1,19 +1,19 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'RAG Docs Agent',
-  description: 'Ask questions about your documentation',
-}
+  title: "RAG Docs Agent",
+  description: "Ask questions about your documentation",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body className="antialiased">{children}</body>
     </html>
-  )
+  );
 }

@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['chromadb']
-  }
-}
+    serverComponentsExternalPackages: ["chromadb"],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

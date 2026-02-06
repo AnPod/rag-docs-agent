@@ -1,5 +1,5 @@
-import { ChatInterface } from './components/ChatInterface'
-import { FileUpload } from './components/FileUpload'
+import { ChatInterface } from "./components/ChatInterface";
+import { FileUpload } from "./components/FileUpload";
 
 export default function Home() {
   return (
@@ -41,5 +41,5 @@ export default function Home() {
         </div>
       </div>
     </main>
-  )
+  );
 }

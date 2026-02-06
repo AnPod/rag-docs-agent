@@ -1,7 +1,14 @@
 ---
 name: coding-agent
 description: Run Codex CLI, Claude Code, OpenCode, or Pi Coding Agent via background process for programmatic control.
-metadata: {"clawdbot":{"emoji":"🧩","requires":{"anyBins":["claude","codex","opencode","pi"]}}}
+metadata:
+  {
+    "clawdbot":
+      {
+        "emoji": "🧩",
+        "requires": { "anyBins": ["claude", "codex", "opencode", "pi"] },
+      },
+  }
 ---
 
 # Coding Agent (background-first)
@@ -23,7 +30,7 @@ bash workdir:~/project/folder background:true command:"<agent command>"
 # Monitor progress
 process action:log sessionId:XXX
 
-# Check if done  
+# Check if done
 process action:poll sessionId:XXX
 
 # Send input (if agent asks a question)
@@ -42,6 +49,7 @@ process action:kill sessionId:XXX
 **Model:** `gpt-5.2-codex` is the default (set in ~/.codex/config.toml)
 
 ### Building/Creating (use --full-auto or --yolo)
+
 ```bash
 # --full-auto: sandboxed but auto-approves in workspace
 bash workdir:~/project background:true command:"codex exec --full-auto \"Build a snake game with dark theme\""
@@ -55,6 +63,7 @@ bash workdir:~/project background:true command:"codex --yolo \"Build a snake gam
 ### Reviewing PRs (vanilla, no flags)
 
 **⚠️ CRITICAL: Never review PRs in Clawdbot's own project folder!**
+
 - Either use the project where the PR is submitted (if it's NOT ~/Projects/clawdbot)
 - Or clone to a temp folder first
 
@@ -77,6 +86,7 @@ bash workdir:/tmp/pr-130-review background:true command:"codex review --base mai
 **Why?** Checking out branches in the running Clawdbot repo can break the live instance!
 
 ### Batch PR Reviews (parallel army!)
+
 ```bash
 # Fetch all PR refs first
 git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*'
@@ -96,6 +106,7 @@ gh pr comment <PR#> --body "<review content>"
 ```
 
 ### Tips for PR Reviews
+
 - **Fetch refs first:** `git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*'`
 - **Use git diff:** Tell Codex to use `git diff origin/main...origin/pr/XX`
 - **Don't checkout:** Multiple parallel reviews = don't let them change branches
@@ -214,58 +225,74 @@ When submitting PRs to external repos, use this format for quality & maintainer-
 
 ````markdown
 ## Original Prompt
+
 [Exact request/problem statement]
 
 ## What this does
+
 [High-level description]
 
 **Features:**
+
 - [Key feature 1]
 - [Key feature 2]
 
 **Example usage:**
+
 ```bash
 # Example
 command example
 ```
 
 ## Feature intent (maintainer-friendly)
+
 [Why useful, how it fits, workflows it enables]
 
 ## Prompt history (timestamped)
+
 - YYYY-MM-DD HH:MM UTC: [Step 1]
 - YYYY-MM-DD HH:MM UTC: [Step 2]
 
 ## How I tested
+
 **Manual verification:**
+
 1. [Test step] - Output: `[result]`
 2. [Test step] - Result: [result]
 
 **Files tested:**
+
 - [Detail]
 - [Edge cases]
 
 ## Session logs (implementation)
+
 - [What was researched]
 - [What was discovered]
 - [Time spent]
 
 ## Implementation details
+
 **New files:**
+
 - `path/file.ts` - [description]
 
 **Modified files:**
+
 - `path/file.ts` - [change]
 
 **Technical notes:**
+
 - [Detail 1]
 - [Detail 2]
 
 ---
-*Submitted by Razor 🥷 - Mariano's AI agent*
+
+_Submitted by Razor 🥷 - Mariano's AI agent_
 ````
 
 **Key principles:**
+
 1. Human-written description (no AI slop)
 2. Feature intent for maintainers
 3. Timestamped prompt history
